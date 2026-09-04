@@ -1,14 +1,13 @@
 {
   "market_version": "1.0",
-  "id": "nexus-plugins",
-  "name": "Nexus 插件源（测试）",
-  "homepage": "https://github.com/linyuan0213/nexus-media-plugins",
+  "id": "",
+  "name": "",
   "plugins": [
     {
       "id": "demo_plugin",
       "path": "plugins/demo_plugin.json",
-      "updated_at": "2026-09-04T01:00:00+08:00"
+      "updated_at": ""
     }
   ],
-  "updated_at": "2026-09-04T01:00:00+08:00"
+  "updated_at": "2026-09-04T01:49:24Z"
 }
