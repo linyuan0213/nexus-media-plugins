@@ -62,7 +62,19 @@ def main() -> int:
         "plugins": entries,
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
-    (root / "catalog.json").write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    catalog_path = root / "catalog.json"
+    # 幂等：内容（不含 updated_at）未变化则不重写，避免 CI 反复提交
+    if catalog_path.is_file():
+        try:
+            previous = json.loads(catalog_path.read_text(encoding="utf-8"))
+            prev_sig = {k: v for k, v in previous.items() if k != "updated_at"}
+            new_sig = {k: v for k, v in catalog.items() if k != "updated_at"}
+            if prev_sig == new_sig:
+                print(f"[market-build] OK: {len(entries)} 个插件 → catalog.json 已是最新")
+                return 0
+        except Exception:  # noqa: BLE001
+            pass
+    catalog_path.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"[market-build] OK: {len(entries)} 个插件 → catalog.json")
     return 0
 
