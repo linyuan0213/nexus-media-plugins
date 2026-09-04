@@ -32,13 +32,15 @@ def fail(msg: str) -> None:
 
 def build_zip(folder: pathlib.Path) -> bytes:
     buf = io.BytesIO()
+    fixed = (2020, 1, 1, 0, 0, 0)
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted(folder.rglob("*")):
             if not path.is_file():
                 continue
             if path.name == "detail.json":
                 continue  # 生成物不能打进包（否则哈希依赖自身导致循环漂移）
-            zf.writestr(path.relative_to(folder).as_posix(), path.read_bytes())
+            info = zipfile.ZipInfo(path.relative_to(folder).as_posix(), fixed)
+            zf.writestr(info, path.read_bytes())
     return buf.getvalue()
 
 
@@ -85,16 +87,20 @@ def main() -> int:
             }
         )
         detail_path = folder / "detail.json"
+        changed = True
         if detail_path.is_file():
             try:
                 previous = json.loads(detail_path.read_text(encoding="utf-8"))
                 prev_sig = {k: v for k, v in previous.items() if k != "updated_at"}
                 new_sig = {k: v for k, v in detail.items() if k != "updated_at"}
                 if prev_sig == new_sig:
-                    continue  # 内容未变，保留原 updated_at，避免 CI 反复提交
+                    # 内容未变：保留原 updated_at，避免 CI 反复提交；但仍需纳入目录
+                    changed = False
+                    detail["updated_at"] = previous.get("updated_at", detail["updated_at"])
             except Exception:  # noqa: BLE001
                 pass
-        detail_path.write_text(json.dumps(detail, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if changed:
+            detail_path.write_text(json.dumps(detail, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         entries.append({"id": manifest["id"], "path": f"plugins/{folder.name}/detail.json", "updated_at": detail["updated_at"]})
 
     catalog = {
