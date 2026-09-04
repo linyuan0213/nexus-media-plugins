@@ -34,8 +34,11 @@ def build_zip(folder: pathlib.Path) -> bytes:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted(folder.rglob("*")):
-            if path.is_file():
-                zf.writestr(path.relative_to(folder).as_posix(), path.read_bytes())
+            if not path.is_file():
+                continue
+            if path.name == "detail.json":
+                continue  # 生成物不能打进包（否则哈希依赖自身导致循环漂移）
+            zf.writestr(path.relative_to(folder).as_posix(), path.read_bytes())
     return buf.getvalue()
 
 
