@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "id": "demo_plugin",
   "name": "示例插件 Demo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "linyuan0213",
   "author_url": "https://github.com/linyuan0213",
   "description": "插件市场联调用示例插件（无副作用）",
@@ -25,8 +25,8 @@
     "routes": [],
     "slots": []
   },
-  "download_url": "dist/demo_plugin@1.0.0.zip",
-  "sha256": "5f99d63d28e9c17a4a5e7c8280050acec0dfdc0057f8b1faac9eac2642e07205",
-  "size": 1101,
-  "updated_at": "2026-09-04T02:35:13Z"
+  "download_url": "dist/demo_plugin@1.0.1.zip",
+  "sha256": "157c02c2ad3d83249fb0becbd37d8efe1807ce7e4be6ec4579d35877ba18b166",
+  "size": 1155,
+  "updated_at": "2026-09-04T04:35:21Z"
 }
