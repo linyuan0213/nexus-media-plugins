@@ -5,9 +5,9 @@
   "plugins": [
     {
       "id": "demo_plugin",
-      "path": "plugins/demo_plugin.json",
-      "updated_at": ""
+      "path": "plugins/demo_plugin/detail.json",
+      "updated_at": "2026-09-04T01:55:14Z"
     }
   ],
-  "updated_at": "2026-09-04T01:51:03Z"
+  "updated_at": "2026-09-04T01:55:14Z"
 }

@@ -1,0 +1,32 @@
+{
+  "manifest_version": "1.0",
+  "id": "demo_plugin",
+  "name": "示例插件 Demo",
+  "version": "1.0.0",
+  "author": "linyuan0213",
+  "author_url": "https://github.com/linyuan0213",
+  "description": "插件市场联调用示例插件（无副作用）",
+  "category": "utility",
+  "tags": [
+    "utility"
+  ],
+  "icon": "",
+  "color": "",
+  "min_app_version": "4.15.2",
+  "backend": {
+    "entry": "backend.plugin:DemoPlugin",
+    "tools": []
+  },
+  "frontend": {
+    "settings": {
+      "component": "",
+      "fields": []
+    },
+    "routes": [],
+    "slots": []
+  },
+  "download_url": "dist/demo_plugin@1.0.0.zip",
+  "sha256": "6b9680b323c1dfb0aae517fd2f445235eb6d2fef39fb1f0d1e405d53b11ea251",
+  "size": 1321,
+  "updated_at": "2026-09-04T01:55:14Z"
+}
