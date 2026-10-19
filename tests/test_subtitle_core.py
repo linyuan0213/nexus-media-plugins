@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import io
-import json
 import sys
 from array import array
 from pathlib import Path
@@ -259,10 +258,8 @@ def test_chinese_subtitle_presence_soft(monkeypatch, tmp_path):
     video.write_bytes(b"x")
     monkeypatch.setattr("backend.subtitle_presence.shutil.which", lambda _: "/usr/bin/ffprobe")
     monkeypatch.setattr(
-        "backend.subtitle_presence.subprocess.run",
-        lambda *a, **k: SimpleNamespace(
-            stdout=json.dumps({"streams": [{"tags": {"language": "chi", "title": "简体"}}]})
-        ),
+        "backend.subtitle_presence.FfmpegProcessor.get_video_metadata",
+        lambda _path: {"streams": [{"tags": {"language": "chi", "title": "简体"}}]},
     )
     assert check_soft_subtitles(str(video))
 

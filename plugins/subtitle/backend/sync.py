@@ -7,12 +7,16 @@ import math
 import os
 import shutil
 import statistics
-import subprocess
 import sys
+import tempfile
+import wave
 from array import array
 from datetime import timedelta
+from pathlib import Path
 
 import srt
+
+from app.infrastructure.ffmpeg import FfmpegProcessor
 
 from .models import SyncAdjustment
 
@@ -67,7 +71,6 @@ def detect_audio_offset(
     content: bytes,
     *,
     max_seconds: int = 1800,
-    sample_rate: int = 8000,
 ) -> SyncAdjustment:
     """通过音频语音起始点估计恒定偏移；仅支持本地视频和 SRT."""
     if not os.path.isfile(video_path):
@@ -80,39 +83,26 @@ def detect_audio_offset(
         raise SyncUnavailable(f"SRT 解析失败: {e}") from e
     if len(cues) < 5:
         raise SyncUnavailable("字幕 cue 太少")
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+        audio_path = tmp.name
     try:
-        proc = subprocess.run(
-            [
-                "ffmpeg",
-                "-nostdin",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-t",
-                str(max(60, int(max_seconds))),
-                "-i",
-                video_path,
-                "-vn",
-                "-sn",
-                "-dn",
-                "-ac",
-                "1",
-                "-ar",
-                str(sample_rate),
-                "-f",
-                "s16le",
-                "-acodec",
-                "pcm_s16le",
-                "-",
-            ],
-            capture_output=True,
-            timeout=180,
-        )
-    except (OSError, subprocess.SubprocessError) as e:
-        raise SyncUnavailable(f"音频提取失败: {e}") from e
-    if proc.returncode != 0 or not proc.stdout:
+        if not FfmpegProcessor.extract_wav_from_video(
+            video_path,
+            audio_path,
+            duration=max(60, int(max_seconds)),
+        ):
+            raise SyncUnavailable("音频提取失败")
+        try:
+            with wave.open(audio_path, "rb") as wf:
+                sample_rate = wf.getframerate()
+                pcm = wf.readframes(wf.getnframes())
+        except (OSError, wave.Error) as e:
+            raise SyncUnavailable(f"音频读取失败: {e}") from e
+    finally:
+        Path(audio_path).unlink(missing_ok=True)
+    if not pcm:
         raise SyncUnavailable("音频提取失败")
-    onsets = _speech_onsets(proc.stdout, sample_rate)
+    onsets = _speech_onsets(pcm, sample_rate)
     if len(onsets) < 5:
         raise SyncUnavailable("未检测到足够的语音起始点")
     cue_starts = sorted(
