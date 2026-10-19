@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "id": "subtitle",
   "name": "字幕管理",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "linyuan0213",
   "author_url": "https://github.com/linyuan0213",
   "description": "媒体转移后自动搜索/下载字幕，支持手动上传、识别重命名、多语言多字幕与时间轴校正。",
@@ -372,8 +372,8 @@
     },
     "slots": []
   },
-  "download_url": "dist/subtitle@1.0.1.zip",
-  "sha256": "f5babda04de5f6dd08b91c29ea69dfe0050eaaae60e694301e69757627072b78",
-  "size": 168478,
-  "updated_at": "2026-10-19T08:48:21Z"
+  "download_url": "dist/subtitle@1.0.2.zip",
+  "sha256": "6e6425f6ae149965966c51ced097b23526e063e7e58b667510c7dc6a22080aa1",
+  "size": 168410,
+  "updated_at": "2026-10-19T08:57:46Z"
 }
