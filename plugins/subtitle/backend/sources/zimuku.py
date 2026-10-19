@@ -25,13 +25,8 @@ from ..naming import parse_language_and_flags
 from .base import SourceError
 
 _BASE = "https://zimuku.org"
-_CAPTCHA_IMAGE_RE = re.compile(
-    r"data:image/(?:bmp|png|jpeg);base64,([A-Za-z0-9+/=\s]+)", re.IGNORECASE
-)
-_CAPTCHA_LOCATION_RE = re.compile(
-    r"self\.location\s*=\s*[\"']([^\"']+)[\"']\s*\+\s*stringToHex\(", re.IGNORECASE
-)
-_SEARCH_REDIRECT_RE = re.compile(r"url\s*=\s*'([^']*)'\s*\+\s*url", re.IGNORECASE)
+_CAPTCHA_IMAGE_PATTERN = r"data:image/(?:bmp|png|jpeg);base64,([A-Za-z0-9+/=\s]+)"
+_CAPTCHA_LOCATION_PATTERN = r"self\.location\s*=\s*[\"']([^\"']+)[\"']\s*\+\s*stringToHex\("
 _TEXT_FORMATS = {".srt", ".ass", ".ssa", ".vtt", ".sup"}
 _MAX_ARCHIVE_MEMBERS = 300
 _MAX_UNCOMPRESSED = 100 * 1024 * 1024
@@ -204,14 +199,14 @@ class ZimukuSource:
 
     def _submit_captcha(self, response, answer: str) -> None:
         self._client.cookies.set("srcurl", _js_hex(str(response.url)))
-        match = _CAPTCHA_LOCATION_RE.search(response.text or "")
+        match = re.search(_CAPTCHA_LOCATION_PATTERN, response.text or "", re.IGNORECASE)
         path = match.group(1) if match else "/?security_verify_img="
         verify_url = urljoin(f"{self._base}/", f"{path}{_js_hex(answer)}")
         self._client.get(verify_url, follow_redirects=False)
 
 
 def _captcha_image(html: str) -> str | None:
-    match = _CAPTCHA_IMAGE_RE.search(html or "")
+    match = re.search(_CAPTCHA_IMAGE_PATTERN, html or "", re.IGNORECASE)
     return base64.b64encode(base64.b64decode(re.sub(r"\s+", "", match.group(1)))).decode() if match else None
 
 

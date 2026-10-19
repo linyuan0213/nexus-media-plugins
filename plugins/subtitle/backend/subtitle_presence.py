@@ -17,8 +17,8 @@ from app.infrastructure.ocr.recognizer import OcrRecognizer
 from .naming import parse_language_and_flags, subtitle_extensions
 from .placer import Placer
 
-_CJK_RE = re.compile(r"[\u3400-\u9fff]")
-_HARD_NAME_RE = re.compile(
+_CJK_PATTERN = r"[\u3400-\u9fff]"
+_HARD_NAME_PATTERN = (
     r"(?i)(中字|中英|简繁|简体|繁体|中文|双语|内嵌|硬字幕|\bchs\b|\bcht\b|\bchi\b|\bzho\b|\bzh\b)"
 )
 _CHINESE_LANGS = {"zh-Hans", "zh-Hant", "mul"}
@@ -128,7 +128,7 @@ def _probe_soft(video_path: str) -> bool:
 
 
 def check_hard_subtitle_filename(video_path: str) -> bool:
-    return bool(_HARD_NAME_RE.search(os.path.basename(video_path)))
+    return bool(re.search(_HARD_NAME_PATTERN, os.path.basename(video_path)))
 
 
 def check_hard_subtitles_by_ocr(video_path: str) -> bool:
@@ -151,7 +151,7 @@ def check_hard_subtitles_by_ocr(video_path: str) -> bool:
                 result = recognizer.recognize(
                     RecognitionTask(task_type=TaskType.TEXT_OCR, image_b64=image_b64)
                 )
-                if result.text and _CJK_RE.search(result.text):
+                if result.text and re.search(_CJK_PATTERN, result.text):
                     return True
     except Exception:  # noqa: BLE001
         return False
@@ -182,6 +182,6 @@ def _has_chinese_content(backend, path: str) -> bool:
         finally:
             stream.close()
         text = sample.decode("utf-8", errors="ignore") + sample.decode("gb18030", errors="ignore")
-        return bool(_CJK_RE.search(text))
+        return bool(re.search(_CJK_PATTERN, text))
     except Exception:  # noqa: BLE001
         return False
