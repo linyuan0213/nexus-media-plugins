@@ -39,6 +39,10 @@ def build_zip(folder: pathlib.Path) -> bytes:
                 continue
             if path.name == "detail.json":
                 continue  # 生成物不能打进包（否则哈希依赖自身导致循环漂移）
+            if "__pycache__" in path.parts or path.suffix in {".pyc", ".pyo"}:
+                continue
+            if path.name in {".DS_Store", "Thumbs.db"}:
+                continue
             info = zipfile.ZipInfo(path.relative_to(folder).as_posix(), fixed)
             zf.writestr(info, path.read_bytes())
     return buf.getvalue()

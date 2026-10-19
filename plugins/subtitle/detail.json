@@ -1,0 +1,379 @@
+{
+  "manifest_version": "1.0",
+  "id": "subtitle",
+  "name": "字幕管理",
+  "version": "1.0.0",
+  "author": "linyuan0213",
+  "author_url": "https://github.com/linyuan0213",
+  "description": "媒体转移后自动搜索/下载字幕，支持手动上传、识别重命名、多语言多字幕与时间轴校正。",
+  "category": "media",
+  "tags": [
+    "字幕",
+    "assrt",
+    "重命名",
+    "多语言",
+    "时间轴"
+  ],
+  "icon": "lucide:subtitles",
+  "color": "#2C4F7E",
+  "min_app_version": "4.26.1",
+  "backend": {
+    "entry": "backend.plugin:SubtitlePlugin",
+    "api_prefix": "/api/plugin/subtitle",
+    "permissions": [],
+    "hooks": [
+      "subtitle.download",
+      "media.transfer_finished",
+      "plugin.config_changed"
+    ],
+    "supports_run": false,
+    "dependencies": [
+      "srt>=3.5.3",
+      "rarfile>=4.2"
+    ],
+    "tools": [
+      {
+        "name": "subtitle_search",
+        "description": "搜索字幕候选（不入库）",
+        "level": "read",
+        "permission": "library:manage",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "year": {
+              "type": "string"
+            },
+            "tmdb_id": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "movie",
+                "tv",
+                "anime"
+              ]
+            },
+            "season": {
+              "type": "integer"
+            },
+            "episode": {
+              "type": "integer"
+            },
+            "languages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      },
+      {
+        "name": "subtitle_download",
+        "description": "下载最佳字幕并落盘到视频同目录（写文件，需确认）",
+        "level": "dangerous",
+        "permission": "library:manage",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tmdb_id": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "movie",
+                "tv",
+                "anime"
+              ]
+            },
+            "season": {
+              "type": "integer"
+            },
+            "episode": {
+              "type": "integer"
+            },
+            "languages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "tmdb_id"
+          ]
+        }
+      }
+    ]
+  },
+  "frontend": {
+    "routes": [
+      {
+        "path": "upload",
+        "component": "UploadPage",
+        "title": "字幕上传",
+        "icon": "lucide:upload",
+        "menu": true
+      },
+      {
+        "path": "rename",
+        "component": "RenamePage",
+        "title": "识别重命名",
+        "icon": "lucide:file-pen-line",
+        "menu": true
+      },
+      {
+        "path": "library",
+        "component": "LibraryPage",
+        "title": "全量补字幕",
+        "icon": "lucide:library-big",
+        "menu": true
+      }
+    ],
+    "settings": {
+      "component": "SettingsPage",
+      "fields": [
+        {
+          "key": "auto_on_transfer",
+          "type": "switch",
+          "label": "转移后自动下载",
+          "default": true,
+          "help": "媒体转移完成后自动搜索并下载字幕"
+        },
+        {
+          "key": "auto_scan_enabled",
+          "type": "switch",
+          "label": "定时全量扫描",
+          "default": false,
+          "help": "按 cron 定时扫描媒体库，补齐缺失中文字幕"
+        },
+        {
+          "key": "auto_scan_cron",
+          "type": "cron",
+          "label": "全量扫描时间",
+          "default": "0 4 * * *",
+          "help": "5 位 cron 表达式，默认每天 04:00"
+        },
+        {
+          "key": "languages",
+          "type": "multi_select",
+          "label": "优先语言",
+          "default": [
+            "zh-Hans",
+            "zh-Hant"
+          ],
+          "options": [
+            {
+              "label": "简体中文",
+              "value": "zh-Hans"
+            },
+            {
+              "label": "繁体中文",
+              "value": "zh-Hant"
+            },
+            {
+              "label": "英文",
+              "value": "en"
+            },
+            {
+              "label": "日文",
+              "value": "ja"
+            },
+            {
+              "label": "韩文",
+              "value": "ko"
+            }
+          ],
+          "help": "决定下载、排序与后缀；一个视频可同时保留多条字幕"
+        },
+        {
+          "key": "sources",
+          "type": "multi_select",
+          "label": "字幕源",
+          "default": [
+            "assrt"
+          ],
+          "options": [
+            {
+              "label": "Assrt",
+              "value": "assrt"
+            },
+            {
+              "label": "Thunder（CID）",
+              "value": "thunder"
+            },
+            {
+              "label": "Zimuku（验证码）",
+              "value": "zimuku"
+            }
+          ],
+          "help": "Thunder 通过 CID 匹配；Zimuku 验证码使用全局 nexus-verify OCR"
+        },
+        {
+          "key": "thunder_meta_search",
+          "type": "switch",
+          "label": "Thunder 名称兜底",
+          "default": false,
+          "help": "CID 未命中时允许按文件名搜索；准确率较低"
+        },
+        {
+          "key": "min_score",
+          "type": "number",
+          "label": "最低匹配分",
+          "default": 60,
+          "help": "候选标题/年份/季集综合评分低于该值时丢弃，默认 60"
+        },
+        {
+          "key": "assrt_token",
+          "type": "password",
+          "label": "Assrt Token",
+          "default": "",
+          "help": "Assrt API Token，日志中会脱敏"
+        },
+        {
+          "key": "suffix_style",
+          "type": "select",
+          "label": "字幕后缀风格",
+          "default": "nexus",
+          "options": [
+            {
+              "label": "Nexus 兼容 (.chi.zh-cn/.zh-tw/.eng)",
+              "value": "nexus"
+            },
+            {
+              "label": "BCP-47 (.zh-Hans/.zh-Hant/.en)",
+              "value": "bcp47"
+            },
+            {
+              "label": "ISO 639-1 (.zh/.en)",
+              "value": "iso639"
+            }
+          ]
+        },
+        {
+          "key": "overwrite_policy",
+          "type": "select",
+          "label": "已存在字幕",
+          "default": "skip",
+          "options": [
+            {
+              "label": "跳过",
+              "value": "skip"
+            },
+            {
+              "label": "追加序号",
+              "value": "suffix"
+            },
+            {
+              "label": "覆盖",
+              "value": "overwrite"
+            }
+          ]
+        },
+        {
+          "key": "sync_policy",
+          "type": "select",
+          "label": "时间轴校正",
+          "default": "off",
+          "options": [
+            {
+              "label": "关闭",
+              "value": "off"
+            },
+            {
+              "label": "仅手动",
+              "value": "manual"
+            },
+            {
+              "label": "参考字幕自动",
+              "value": "auto_reference"
+            },
+            {
+              "label": "音频自动（需 ffmpeg）",
+              "value": "auto_audio"
+            }
+          ]
+        },
+        {
+          "key": "sync_max_offset_ms",
+          "type": "number",
+          "label": "最大自动偏移（毫秒）",
+          "default": 60000
+        },
+        {
+          "key": "sync_min_confidence",
+          "type": "number",
+          "label": "最低同步置信度",
+          "default": 0.75
+        },
+        {
+          "key": "skip_if_chinese_subtitle",
+          "type": "switch",
+          "label": "已有中文字幕时跳过",
+          "default": true,
+          "help": "检测外挂字幕、容器内软字幕和硬字幕；命中后不下载"
+        },
+        {
+          "key": "hard_sub_detection",
+          "type": "select",
+          "label": "硬字幕检测",
+          "default": "filename",
+          "options": [
+            {
+              "label": "关闭",
+              "value": "off"
+            },
+            {
+              "label": "文件名/标题特征（推荐）",
+              "value": "filename"
+            },
+            {
+              "label": "文件名 + 抽帧 OCR",
+              "value": "ocr"
+            }
+          ],
+          "help": "硬字幕无法 100% 确认；OCR 模式较慢，需要 nexus-verify"
+        },
+        {
+          "key": "library_roots",
+          "type": "textarea",
+          "label": "媒体库根目录白名单",
+          "default": "",
+          "help": "每行一个路径；为空时自动下载仅允许事件视频同目录"
+        },
+        {
+          "key": "max_workers",
+          "type": "number",
+          "label": "自动下载并发数",
+          "default": 2
+        },
+        {
+          "key": "library_delay_seconds",
+          "type": "number",
+          "label": "全量扫描间隔（秒）",
+          "default": 1,
+          "help": "控制全量任务的请求频率；Assrt 配额较低时建议调大"
+        },
+        {
+          "key": "request_timeout",
+          "type": "number",
+          "label": "源请求超时（秒）",
+          "default": 20
+        }
+      ]
+    },
+    "slots": []
+  },
+  "download_url": "dist/subtitle@1.0.0.zip",
+  "sha256": "0c6dff8512ae5ccf7f7b0c8d0ee869e04ee668282ed1dcab391998ed67035a0d",
+  "size": 169658,
+  "updated_at": "2026-10-19T08:33:05Z"
+}
