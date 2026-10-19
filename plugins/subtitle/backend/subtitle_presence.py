@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import base64
-import json
 import os
 import re
 import shutil
-import subprocess
 import tempfile
 from dataclasses import dataclass, field
+from pathlib import Path
 
+from app.infrastructure.ffmpeg import FfmpegProcessor
 from app.infrastructure.ocr.core.task import RecognitionTask, TaskType
 from app.infrastructure.ocr.recognizer import OcrRecognizer
 
@@ -105,32 +105,15 @@ def _probe_remote_header(backend, video_path: str) -> bool:
         try:
             return _probe_soft(temp_path)
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink(missing_ok=True)
     except Exception:  # noqa: BLE001
         return False
 
 
 def _probe_soft(video_path: str) -> bool:
     try:
-        result = subprocess.run(
-            [
-                "ffprobe",
-                "-v",
-                "error",
-                "-select_streams",
-                "s",
-                "-show_entries",
-                "stream=index,codec_name:stream_tags=language,title",
-                "-of",
-                "json",
-                video_path,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        data = json.loads(result.stdout or "{}")
-    except (OSError, subprocess.SubprocessError, ValueError):
+        data = FfmpegProcessor.get_video_metadata(video_path) or {}
+    except Exception:  # noqa: BLE001
         return False
     for stream in data.get("streams") or []:
         tags = stream.get("tags") or {}
@@ -159,26 +142,9 @@ def check_hard_subtitles_by_ocr(video_path: str) -> bool:
         with tempfile.TemporaryDirectory(prefix="subtitle-hard-") as tmp:
             for index, ratio in enumerate((0.2, 0.4, 0.6, 0.8)):
                 target = os.path.join(tmp, f"frame-{index}.png")
-                subprocess.run(
-                    [
-                        "ffmpeg",
-                        "-v",
-                        "error",
-                        "-ss",
-                        str(max(0.0, duration * ratio)),
-                        "-i",
-                        video_path,
-                        "-frames:v",
-                        "1",
-                        "-vf",
-                        "crop=iw:ih*0.3:0:ih*0.7",
-                        "-y",
-                        target,
-                    ],
-                    capture_output=True,
-                    timeout=60,
-                )
-                if not os.path.isfile(target):
+                if not FfmpegProcessor.extract_frame(
+                    video_path, target, max(0.0, duration * ratio)
+                ):
                     continue
                 with open(target, "rb") as f:
                     image_b64 = base64.b64encode(f.read()).decode()
@@ -194,23 +160,15 @@ def check_hard_subtitles_by_ocr(video_path: str) -> bool:
 
 def _duration(video_path: str) -> float:
     try:
-        result = subprocess.run(
-            [
-                "ffprobe",
-                "-v",
-                "error",
-                "-show_entries",
-                "format=duration",
-                "-of",
-                "default=noprint_wrappers=1:nokey=1",
-                video_path,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-        return float((result.stdout or "0").strip())
-    except (OSError, subprocess.SubprocessError, ValueError):
+        data = FfmpegProcessor.get_video_metadata(video_path) or {}
+        value = (data.get("format") or {}).get("duration")
+        if value is None:
+            for stream in data.get("streams") or []:
+                value = stream.get("duration")
+                if value is not None:
+                    break
+        return float(value or 0)
+    except (TypeError, ValueError):
         return 0.0
 
 
