@@ -36,6 +36,7 @@ export function UploadPage() {
       const flags = ref('');
       const targetDir = ref('');
       const targetVideo = ref('');
+      const targetBackendId = ref('local');
       const pickerShow = ref(false);
       const tmdbId = ref('');
       const mediaType = ref('movie');
@@ -105,7 +106,7 @@ export function UploadPage() {
         matching.value = true;
         try {
           const data = await apiPost('match', {
-            backend_id: 'local',
+            backend_id: targetBackendId.value,
             mode: mode.value,
             target_dir: targetDir.value.trim() || undefined,
             target_video: targetVideo.value.trim() || undefined,
@@ -144,7 +145,7 @@ export function UploadPage() {
             mappings.push({
               subtitle_filename: file.name,
               video_path: videoPath,
-              backend_id: 'local',
+              backend_id: targetBackendId.value,
               language: language.value,
               flags: parseFlags(),
               sync: { offset_ms: 0, rate: 1, method: 'manual', confidence: 0 },
@@ -372,11 +373,13 @@ export function UploadPage() {
           ]),
           h(host.PathPickerModal, {
             show: pickerShow.value,
+            initialBackendId: targetBackendId.value,
             initialPath: targetDir.value,
             title: '选择目标目录',
             'onUpdate:show': (value) => { pickerShow.value = value; },
-            onConfirm: (path) => {
+            onConfirm: (path, backendId) => {
               targetDir.value = path;
+              targetBackendId.value = backendId || 'local';
               pickerShow.value = false;
               resetResults();
             },

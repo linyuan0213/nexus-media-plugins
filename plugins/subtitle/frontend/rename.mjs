@@ -33,6 +33,7 @@ export function RenamePage() {
       const error = ref('');
       const confirmShow = ref(false);
       const pickerShow = ref(false);
+      const backendId = ref('local');
 
       const riskyCount = computed(
         () => rows.value.filter((row) => ['failed', 'needs_confirmation'].includes(row.action)).length,
@@ -49,7 +50,7 @@ export function RenamePage() {
         try {
           rows.value = await apiPost('rename', {
             mode: 'recognize',
-            scope: { backend_id: 'local', path: path.value.trim(), recursive: recursive.value },
+            scope: { backend_id: backendId.value, path: path.value.trim(), recursive: recursive.value },
             dry_run: true,
           });
         } catch (e) {
@@ -66,7 +67,7 @@ export function RenamePage() {
         try {
           rows.value = await apiPost('rename', {
             mode: 'recognize',
-            scope: { backend_id: 'local', path: path.value.trim(), recursive: recursive.value },
+            scope: { backend_id: backendId.value, path: path.value.trim(), recursive: recursive.value },
             dry_run: false,
           });
         } catch (e) {
@@ -146,11 +147,13 @@ export function RenamePage() {
           ]),
           h(host.PathPickerModal, {
             show: pickerShow.value,
+            initialBackendId: backendId.value,
             initialPath: path.value,
             title: '选择扫描目录',
             'onUpdate:show': (value) => { pickerShow.value = value; },
-            onConfirm: (value) => {
+            onConfirm: (value, selectedBackendId) => {
               path.value = value;
+              backendId.value = selectedBackendId || 'local';
               rows.value = [];
               pickerShow.value = false;
             },
