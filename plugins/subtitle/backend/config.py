@@ -39,6 +39,7 @@ def load_config(ctx) -> dict[str, Any]:
     data["sync_max_offset_ms"] = max(0, int(data.get("sync_max_offset_ms") or 60000))
     data["sync_min_confidence"] = float(data.get("sync_min_confidence") or 0.75)
     data["min_score"] = max(0, min(100, int(data.get("min_score") or 60)))
+    data["library_delay_seconds"] = max(0.0, min(60.0, float(data.get("library_delay_seconds") or 0)))
     return data
 
 

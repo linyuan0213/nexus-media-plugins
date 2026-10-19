@@ -158,7 +158,8 @@ class LibraryScanService:
                     job["failed"] += 1
                 self._save(job)
                 delay = float(config.get("library_delay_seconds") or 0)
-                if delay > 0:
+                if delay > 0 and result.get("action") not in ("exists", "would_download"):
+                    logger.info(f"全量字幕等待 {delay:.0f}s 后继续（源请求限速）")
                     time.sleep(delay)
             if job.get("status") != "cancelled":
                 job["status"] = "completed"

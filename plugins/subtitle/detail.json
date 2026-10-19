@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "id": "subtitle",
   "name": "字幕管理",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "author": "linyuan0213",
   "author_url": "https://github.com/linyuan0213",
   "description": "媒体转移后自动搜索/下载字幕，支持手动上传、识别重命名、多语言多字幕与时间轴校正。",
@@ -360,7 +360,7 @@
           "type": "number",
           "label": "全量扫描间隔（秒）",
           "default": 1,
-          "help": "控制全量任务的请求频率；Assrt 配额较低时建议调大"
+          "help": "仅在需要请求字幕源的条目后等待，最大 60 秒；已有字幕跳过不等待"
         },
         {
           "key": "request_timeout",
@@ -372,8 +372,8 @@
     },
     "slots": []
   },
-  "download_url": "dist/subtitle@1.0.7.zip",
-  "sha256": "1b5b3c2cf269e6ae09d8d914a7bbc64dd20f713e5047276472a50471590f9c29",
-  "size": 172420,
-  "updated_at": "2026-10-19T09:47:44Z"
+  "download_url": "dist/subtitle@1.0.8.zip",
+  "sha256": "9380b4629802b8cd7838a599028c7e0d5dfe1afbdd4b142ac07c6b01ef12b3ac",
+  "size": 172705,
+  "updated_at": "2026-10-19T10:22:47Z"
 }
