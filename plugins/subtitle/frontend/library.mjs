@@ -10,7 +10,7 @@ export function LibraryPage() {
   return defineComponent({
     name: 'SubtitleLibraryPage',
     setup() {
-      const { h, ref, computed, onBeforeUnmount } = host.Vue;
+      const { h, ref, computed, onBeforeUnmount, onMounted } = host.Vue;
       const {
         NAlert,
         NButton,
@@ -34,6 +34,16 @@ export function LibraryPage() {
       const job = ref(null);
       const error = ref('');
       let timer = null;
+      const STORAGE_KEY = 'subtitle.library.job_id';
+
+      function remember(id) {
+        try {
+          if (id) localStorage.setItem(STORAGE_KEY, id);
+          else localStorage.removeItem(STORAGE_KEY);
+        } catch {
+          /* 隐私模式下 localStorage 不可用时忽略 */
+        }
+      }
 
       const mediaTypeOptions = [
         { label: '电影', value: 'movie' },
@@ -57,6 +67,10 @@ export function LibraryPage() {
             timer = setTimeout(() => poll(id), 2000);
           }
         } catch (e) {
+          if (job.value?.id === id) {
+            remember(null);
+            job.value = null;
+          }
           error.value = e?.message || String(e);
           stop();
         }
@@ -73,7 +87,10 @@ export function LibraryPage() {
             dry_run: dryRun.value,
           });
           job.value = result;
-          if (result?.id) timer = setTimeout(() => poll(result.id), 1000);
+          if (result?.id) {
+            remember(result.id);
+            timer = setTimeout(() => poll(result.id), 1000);
+          }
         } catch (e) {
           error.value = e?.message || String(e);
         } finally {
@@ -90,6 +107,19 @@ export function LibraryPage() {
           error.value = e?.message || String(e);
         }
       }
+
+      onMounted(() => {
+        let saved = null;
+        try {
+          saved = localStorage.getItem(STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
+        if (saved) {
+          job.value = { id: saved };
+          poll(saved);
+        }
+      });
 
       onBeforeUnmount(stop);
 
