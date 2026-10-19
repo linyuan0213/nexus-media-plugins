@@ -250,7 +250,8 @@ class SubtitlePlugin:
     def _api_library_job(self, params: dict):
         if self._library is None:
             raise RuntimeError("插件尚未启用")
-        job = self._library.get(str((params or {}).get("job_id") or ""))
+        job_id = str((params or {}).get("job_id") or "")
+        job = self._library.get(job_id) if job_id else self._library.active()
         if job is None:
             raise RuntimeError("任务不存在")
         return job

@@ -63,12 +63,21 @@ class LibraryScanService:
                 job["current"] = ""
                 self._store.save_job(job)
 
-    def start(self, payload: dict) -> dict:
+    def active(self) -> dict | None:
         if self._active_job_id:
-            active = self._get(self._active_job_id)
-            if active and active.get("status") in ("queued", "running"):
-                raise SourceError("已有全量字幕任务正在运行")
+            job = self._get(self._active_job_id)
+            if job and job.get("status") in ("queued", "running"):
+                return {key: value for key, value in job.items() if key != "items"}
             self._active_job_id = None
+        for job in self._store.list_jobs():
+            if job.get("status") in ("queued", "running"):
+                return {key: value for key, value in job.items() if key != "items"}
+        return None
+
+    def start(self, payload: dict) -> dict:
+        active = self.active()
+        if active:
+            return active
         roots = self._select_roots(payload)
         if not roots:
             raise SourceError("没有可扫描的媒体库根目录")
