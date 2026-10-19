@@ -36,6 +36,7 @@ export function UploadPage() {
       const flags = ref('');
       const targetDir = ref('');
       const targetVideo = ref('');
+      const pickerShow = ref(false);
       const tmdbId = ref('');
       const mediaType = ref('movie');
       const season = ref(null);
@@ -238,14 +239,17 @@ export function UploadPage() {
                   }),
                 ]),
                 h(NFormItem, { label: '目标目录' }, [
-                  h(NInput, {
-                    value: targetDir.value,
-                    placeholder: '/media/movies',
-                    'onUpdate:value': (value) => {
-                      targetDir.value = value;
-                      resetResults();
-                    },
-                  }),
+                  h(NSpace, { size: 8, align: 'center' }, [
+                    h(NInput, {
+                      value: targetDir.value,
+                      placeholder: '/media/movies',
+                      'onUpdate:value': (value) => {
+                        targetDir.value = value;
+                        resetResults();
+                      },
+                    }),
+                    h(NButton, { size: 'small', onClick: () => { pickerShow.value = true; } }, { default: () => '选择' }),
+                  ]),
                 ]),
                 mode.value === 'target_video'
                   ? h(NFormItem, { label: '目标视频' }, [
@@ -366,6 +370,17 @@ export function UploadPage() {
                 : null,
             ]),
           ]),
+          h(host.PathPickerModal, {
+            show: pickerShow.value,
+            initialPath: targetDir.value,
+            title: '选择目标目录',
+            'onUpdate:show': (value) => { pickerShow.value = value; },
+            onConfirm: (path) => {
+              targetDir.value = path;
+              pickerShow.value = false;
+              resetResults();
+            },
+          }),
         ]);
     },
   });

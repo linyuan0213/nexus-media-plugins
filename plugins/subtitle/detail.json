@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "id": "subtitle",
   "name": "字幕管理",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": "linyuan0213",
   "author_url": "https://github.com/linyuan0213",
   "description": "媒体转移后自动搜索/下载字幕，支持手动上传、识别重命名、多语言多字幕与时间轴校正。",
@@ -16,7 +16,7 @@
   ],
   "icon": "lucide:subtitles",
   "color": "#2C4F7E",
-  "min_app_version": "4.27.0",
+  "min_app_version": "4.27.1",
   "backend": {
     "entry": "backend.plugin:SubtitlePlugin",
     "api_prefix": "/api/plugin/subtitle",
@@ -372,8 +372,8 @@
     },
     "slots": []
   },
-  "download_url": "dist/subtitle@1.0.5.zip",
-  "sha256": "befb23f5e7d8816e12952e9e1e0e179fac981c3f93bd9c23a419c7b64b224cb5",
-  "size": 169550,
-  "updated_at": "2026-10-19T09:41:16Z"
+  "download_url": "dist/subtitle@1.0.6.zip",
+  "sha256": "75d396d4dfa8e7619d1de14e162276cd14fef070a4bb88cd4b5b651ed1b0c37e",
+  "size": 172042,
+  "updated_at": "2026-10-19T09:47:20Z"
 }

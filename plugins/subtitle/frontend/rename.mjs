@@ -32,6 +32,7 @@ export function RenamePage() {
       const rows = ref([]);
       const error = ref('');
       const confirmShow = ref(false);
+      const pickerShow = ref(false);
 
       const riskyCount = computed(
         () => rows.value.filter((row) => ['failed', 'needs_confirmation'].includes(row.action)).length,
@@ -97,14 +98,17 @@ export function RenamePage() {
           pageTitle(h, 'lucide:file-pen-line', '识别重命名', '扫描已有字幕，识别语言/标记并匹配视频；先预览，再应用。'),
           h(NCard, { title: '扫描范围', bordered: false, size: 'small' }, [
             h(NSpace, { vertical: true, size: 10 }, [
-              h(NInput, {
-                value: path.value,
-                placeholder: '/media/movies',
-                'onUpdate:value': (value) => {
-                  path.value = value;
-                  rows.value = [];
-                },
-              }),
+              h(NSpace, { size: 8, align: 'center' }, [
+                h(NInput, {
+                  value: path.value,
+                  placeholder: '/media/movies',
+                  'onUpdate:value': (value) => {
+                    path.value = value;
+                    rows.value = [];
+                  },
+                }),
+                h(NButton, { size: 'small', onClick: () => { pickerShow.value = true; } }, { default: () => '选择目录' }),
+              ]),
               h(NSpace, { size: 12, align: 'center' }, [
                 h('span', { class: 'subtitle-muted' }, '递归'),
                 h(NSwitch, {
@@ -140,6 +144,17 @@ export function RenamePage() {
               ? h(NDataTable, { columns, data: rows.value, size: 'small', bordered: false, pagination: false, maxHeight: 480, scrollX: 900 })
               : h(NEmpty, { description: '尚无结果' }),
           ]),
+          h(host.PathPickerModal, {
+            show: pickerShow.value,
+            initialPath: path.value,
+            title: '选择扫描目录',
+            'onUpdate:show': (value) => { pickerShow.value = value; },
+            onConfirm: (value) => {
+              path.value = value;
+              rows.value = [];
+              pickerShow.value = false;
+            },
+          }),
           h(NModal, {
             show: confirmShow.value,
             preset: 'dialog',

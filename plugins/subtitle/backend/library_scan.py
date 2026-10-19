@@ -129,14 +129,24 @@ class LibraryScanService:
         self._save(job)
         config = self._service.config()
         languages = list(config.get("languages") or ["zh-Hans"])
+        logger = self._service._ctx
+        total = job.get("total") or 0
         try:
-            for item in job.get("items") or []:
+            for index, item in enumerate(job.get("items") or [], start=1):
                 current = self._get(job_id) or {}
                 if current.get("status") == "cancelled":
                     job["status"] = "cancelled"
                     break
                 job["current"] = item.get("video_path") or ""
+                self._save(job)
+                logger.info(f"全量字幕 {index}/{total} 开始: {job['current']}")
+                item_started = time.monotonic()
                 result = self._one(item, job.get("dry_run", False), languages, config)
+                elapsed = time.monotonic() - item_started
+                logger.info(
+                    f"全量字幕 {index}/{total} {result.get('status')} "
+                    f"({elapsed:.1f}s): {job['current']}"
+                )
                 job.setdefault("results", []).insert(0, result)
                 job["results"] = job["results"][:200]
                 status = result.get("status")

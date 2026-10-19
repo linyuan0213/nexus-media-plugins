@@ -33,6 +33,7 @@ export function LibraryPage() {
       const loading = ref(false);
       const job = ref(null);
       const error = ref('');
+      const pickerShow = ref(false);
       let timer = null;
       const STORAGE_KEY = 'subtitle.library.job_id';
 
@@ -160,13 +161,16 @@ export function LibraryPage() {
           pageTitle(h, 'lucide:library-big', '全量补字幕', '扫描媒体库，已有中文字幕跳过；缺失时按语言自动下载。'),
           h(NCard, { title: '扫描范围', bordered: false, size: 'small' }, [
             h(NSpace, { vertical: true, size: 10 }, [
-              h(NDynamicTags, {
-                value: roots.value,
-                placeholder: '留空使用已配置媒体库，例如 /media/movies',
-                'onUpdate:value': (value) => {
-                  roots.value = value;
-                },
-              }),
+              h(NSpace, { size: 8, align: 'center' }, [
+                h(NDynamicTags, {
+                  value: roots.value,
+                  placeholder: '留空使用已配置媒体库，例如 /media/movies',
+                  'onUpdate:value': (value) => {
+                    roots.value = value;
+                  },
+                }),
+                h(NButton, { size: 'small', onClick: () => { pickerShow.value = true; } }, { default: () => '选择目录' }),
+              ]),
               h(NSpace, { size: 12, align: 'center' }, [
                 h(NSelect, {
                   value: mediaTypes.value,
@@ -199,6 +203,16 @@ export function LibraryPage() {
                 : null,
             ]),
           ]),
+          h(host.PathPickerModal, {
+            show: pickerShow.value,
+            initialPath: roots.value[0] || '',
+            title: '选择媒体库目录',
+            'onUpdate:show': (value) => { pickerShow.value = value; },
+            onConfirm: (path) => {
+              if (path && !roots.value.includes(path)) roots.value = [...roots.value, path];
+              pickerShow.value = false;
+            },
+          }),
           job.value
             ? h(NCard, { title: `任务 ${job.value.id?.slice(0, 8) || ''}`, bordered: false, size: 'small' }, [
                 h(NSpace, { vertical: true, size: 10 }, [
