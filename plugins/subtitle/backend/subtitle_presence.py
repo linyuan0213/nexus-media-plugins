@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import base64
+import io
 import os
 import re
 import shutil
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from PIL import Image
 
 from app.infrastructure.ffmpeg import FfmpegProcessor
 from app.infrastructure.ocr.core.task import RecognitionTask, TaskType
@@ -146,13 +149,20 @@ def check_hard_subtitles_by_ocr(video_path: str) -> bool:
                     video_path, target, max(0.0, duration * ratio)
                 ):
                     continue
-                with open(target, "rb") as f:
-                    image_b64 = base64.b64encode(f.read()).decode()
-                result = recognizer.recognize(
-                    RecognitionTask(task_type=TaskType.TEXT_OCR, image_b64=image_b64)
-                )
-                if result.text and re.search(_CJK_PATTERN, result.text):
-                    return True
+                with Image.open(target) as frame:
+                    frame = frame.convert("RGB")
+                    variants = [frame]
+                    width, height = frame.size
+                    variants.append(frame.crop((0, int(height * 0.3), width, height)))
+                    for image in variants:
+                        buffer = io.BytesIO()
+                        image.save(buffer, format="PNG")
+                        image_b64 = base64.b64encode(buffer.getvalue()).decode()
+                        result = recognizer.recognize(
+                            RecognitionTask(task_type=TaskType.TEXT_OCR, image_b64=image_b64)
+                        )
+                        if result.text and re.search(_CJK_PATTERN, result.text):
+                            return True
     except Exception:  # noqa: BLE001
         return False
     return False
