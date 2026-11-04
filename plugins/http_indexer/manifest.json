@@ -1,0 +1,61 @@
+{
+  "manifest_version": "1.0",
+  "id": "http_indexer",
+  "name": "HTTP 索引器",
+  "version": "1.0.0",
+  "author": "linyuan0213",
+  "author_url": "https://github.com/linyuan0213",
+  "description": "接入任意符合 /api/indexer/info|search|list 契约的 HTTP 索引器，支持关键词搜索与最新列表浏览。",
+  "category": "indexer",
+  "tags": [
+    "indexer",
+    "search",
+    "http"
+  ],
+  "icon": "lucide:search-code",
+  "color": "#2563EB",
+  "min_app_version": "5.6.0",
+  "backend": {
+    "entry": "backend.plugin:HttpIndexerPlugin",
+    "api_prefix": "",
+    "permissions": [],
+    "hooks": [],
+    "supports_run": false,
+    "dependencies": [],
+    "metadata": {
+      "indexer_providers": [
+        {
+          "key": "http-indexer",
+          "type": "http"
+        }
+      ]
+    }
+  },
+  "frontend": {
+    "settings": {
+      "fields": [
+        {
+          "key": "base_url",
+          "label": "索引器地址",
+          "type": "input",
+          "required": true,
+          "placeholder": "https://indexer.example"
+        },
+        {
+          "key": "token",
+          "label": "API Token",
+          "type": "password",
+          "required": false
+        },
+        {
+          "key": "timeout",
+          "label": "超时（秒）",
+          "type": "number",
+          "default": 30
+        }
+      ]
+    },
+    "routes": [],
+    "slots": []
+  }
+}
