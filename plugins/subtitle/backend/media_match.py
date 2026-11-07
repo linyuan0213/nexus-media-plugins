@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from app.core.constants import RMT_MEDIAEXT
-from app.domain.mediatypes import MediaType
+from app.plugin_sdk.mediatypes import ProviderMediaType
 from app.media.parser import meta_info
 
 from .matcher import title_similarity
@@ -135,7 +135,7 @@ def _match_by_filename(
     *,
     backend_id: str,
 ) -> list[MatchCandidate]:
-    parsed = meta_info(stripped, mtype=MediaType.from_string(str(file_info.get("type") or "")))
+    parsed = meta_info(stripped, mtype=ProviderMediaType.from_value(str(file_info.get("type") or "")))
     title = (parsed.title or parsed.get_name()) if parsed else ""
     if not title:
         return []

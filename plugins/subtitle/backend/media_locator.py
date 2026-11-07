@@ -5,7 +5,7 @@ from __future__ import annotations
 import posixpath
 
 from app.db.repositories.media_sync_repo_adapter import MediaSyncRepositoryAdapter
-from app.domain.mediatypes import MediaType
+from app.plugin_sdk.mediatypes import ProviderMediaType
 
 from .media_match import list_videos
 
@@ -20,8 +20,8 @@ def locate(
     season: int | None = None,
     episode: int | None = None,
 ) -> list[dict]:
-    mtype = MediaType.from_string(str(media_type))
-    if mtype == MediaType.UNKNOWN:
+    mtype = ProviderMediaType.from_value(str(media_type))
+    if mtype == ProviderMediaType.UNKNOWN:
         return []
     try:
         info = media_service.get_tmdb_info(mtype, int(tmdb_id), append_to_response="all") or {}
@@ -48,16 +48,16 @@ def locate(
     # 回退：扫描已配置的媒体库根目录
     found: list[dict] = []
     for root in resolver.roots():
-        if mtype == MediaType.MOVIE and root.media_type not in ("movie",):
+        if mtype == ProviderMediaType.MOVIE and root.media_type not in ("movie",):
             continue
-        if mtype in (MediaType.TV, MediaType.ANIME) and root.media_type not in ("tv", "anime"):
+        if mtype in (ProviderMediaType.SERIES, ProviderMediaType.ANIME) and root.media_type not in ("tv", "anime"):
             continue
         for video in list_videos(root.backend, root.path, recursive=True):
             if not _title_matches(video.title, title):
                 continue
             if year and video.year and abs(_to_int(year) - _to_int(video.year)) > 1:
                 continue
-            if mtype != MediaType.MOVIE and (video.season != season or video.episode != episode):
+            if mtype != ProviderMediaType.MOVIE and (video.season != season or video.episode != episode):
                 continue
             found.append(
                 {
@@ -76,7 +76,7 @@ def locate(
 def _from_path(
     resolver,
     path: str,
-    mtype: MediaType,
+    mtype: ProviderMediaType,
     season: int | None,
     episode: int | None,
     confidence: int,
@@ -84,10 +84,10 @@ def _from_path(
     resolved = resolver.resolve(path)
     if resolved:
         backend, root = resolved
-        if mtype == MediaType.MOVIE and posixpath.splitext(path)[1]:
+        if mtype == ProviderMediaType.MOVIE and posixpath.splitext(path)[1]:
             return [{"video_path": path, "backend_id": root.backend_id, "confidence": confidence}]
         for video in list_videos(backend, path, recursive=True):
-            if mtype != MediaType.MOVIE and (video.season != season or video.episode != episode):
+            if mtype != ProviderMediaType.MOVIE and (video.season != season or video.episode != episode):
                 continue
             return [
                 {
