@@ -16,7 +16,7 @@
   ],
   "icon": "lucide:subtitles",
   "color": "#2C4F7E",
-  "min_app_version": "4.27.1",
+  "min_app_version": "5.9.0",
   "backend": {
     "entry": "backend.plugin:SubtitlePlugin",
     "api_prefix": "/api/plugin/subtitle",
