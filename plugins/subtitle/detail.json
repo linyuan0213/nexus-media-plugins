@@ -372,8 +372,8 @@
     },
     "slots": []
   },
-  "download_url": "dist/subtitle@1.0.9.zip",
-  "sha256": "966ba4c8c5c0e89c3890f31c988a0449538467711be089385b627a4a6fb88315",
-  "size": 173163,
-  "updated_at": "2026-10-19T10:47:27Z"
+  "download_url": "dist/subtitle@1.0.10.zip",
+  "sha256": "c68ea0259212a81501de13ddde3fbd9dc26f027a4968b7ad755341b2c5bda8ef",
+  "size": 173269,
+  "updated_at": "2026-11-07T08:36:08Z"
 }
